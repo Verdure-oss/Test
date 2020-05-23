@@ -10,6 +10,6 @@ public class TestConrtoller {
     @RequestMapping(value = "test")
     @ResponseBody
     public String test() {
-        return "访问成功---------0523";
+        return "访问成功--------0523";
     }
 }
