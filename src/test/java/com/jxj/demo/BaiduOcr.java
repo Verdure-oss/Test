@@ -14,9 +14,8 @@ public class BaiduOcr {
     public static String imgOcr(byte[] img) throws JSONException {
         getClient();
         JSONObject jsonObject = client.webImage(img, null);
-        JSONArray jSONArray=jsonObject.getJSONArray("words_result");
-        String j= (String) jSONArray.get(0);
-        return j;
+        JSONArray jSONArray = jsonObject.getJSONArray("words_result");
+        return jSONArray.getJSONObject(0).getString("words");
     }
 
     private static void getClient() {

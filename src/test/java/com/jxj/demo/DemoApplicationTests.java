@@ -38,10 +38,16 @@ class DemoApplicationTests {
             Thread.sleep(2000);
             indexEntity.getUser().sendKeys("17501691006");
             indexEntity.getPasswd().sendKeys("993820Jxj");
-            Actions action = new Actions(chromeDriver);
+            //Actions action = new Actions(chromeDriver);
             byte[] bs = indexEntity.getCapImg().getScreenshotAs(OutputType.BYTES);
-            String a = BaiduOcr.imgOcr(bs);
-            System.out.println(a);
+            String code = BaiduOcr.imgOcr(bs);
+            System.out.println(code);
+            if (code.matches("^\\d{4}$")) {
+                System.out.println("验证码通过");
+                indexEntity.getCode().sendKeys(code);
+                Thread.sleep(1000);
+                indexEntity.getLoginSubmit().click();
+            }
         } catch (Exception e) {
             System.out.println("错误打印开始----------start\n" + e);
             System.out.println("错误打印结束----------end\n");

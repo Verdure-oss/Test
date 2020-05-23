@@ -15,6 +15,10 @@ public class IndexEntity {
     private WebElement passwd;
     @FindBy(id = "capImg")
     private WebElement capImg;
+    @FindBy(xpath = "//*[@id=\"captchafield\"]")
+    private WebElement code;
+    @FindBy(xpath = "//*[@id=\"btn-login\"]")
+    private WebElement loginSubmit;
 
     public IndexEntity(ChromeDriver chromeDriver) {
         PageFactory.initElements(chromeDriver, this);
@@ -34,5 +38,13 @@ public class IndexEntity {
 
     public WebElement getCapImg() {
         return capImg;
+    }
+
+    public WebElement getCode() {
+        return code;
+    }
+
+    public WebElement getLoginSubmit() {
+        return loginSubmit;
     }
 }
