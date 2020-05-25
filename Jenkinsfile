@@ -12,11 +12,11 @@ pipeline {
              sh label: '', script: 'mvn clean package -Dmaven.test.skip=true dockerfile:build'
          }
       }
-      stage('docker build push') {
+      //stage('docker build push') {
          //steps {
              //sh "docker tag demo 49.233.11.217:5000/demo"
              //sh "docker push 49.233.11.217:5000/demo"
          //}
-      }
+      //}
    }
 }
