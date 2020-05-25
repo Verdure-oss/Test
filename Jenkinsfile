@@ -13,10 +13,10 @@ pipeline {
          }
       }
       stage('docker build push') {
-         steps {
-             sh "docker tag demo 49.233.11.217:5000/demo"
-             sh "docker push 49.233.11.217:5000/demo"
-         }
+         //steps {
+             //sh "docker tag demo 49.233.11.217:5000/demo"
+             //sh "docker push 49.233.11.217:5000/demo"
+         //}
       }
    }
 }
