@@ -7,6 +7,16 @@ pipeline {
             checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '111f9a53-039b-4134-a12a-467af5cfc645', url: 'git@github.com:git-jxj/Test.git']]])
          }
       }
+      stage('docker container stop and rm') {
+         steps {
+            sh 'docker stop demo && docker rm demo';
+         }
+      }
+      stage('docker images rmi') {
+         steps {
+            sh 'docker rmi demo';
+         }
+      }
       stage('build') {
          steps {
              sh 'mvn clean package -Dmaven.test.skip=true dockerfile:build'
