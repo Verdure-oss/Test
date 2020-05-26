@@ -15,6 +15,6 @@ public class TestConrtoller {
     @RequestMapping(value = "test1")
     @ResponseBody
     public String test1(@RequestParam("name") String name, @RequestParam("pwd") String pwd) {
-        return name + ":" + pwd;
+        return "name:" + name + " pwd:" + pwd;
     }
 }
