@@ -9,7 +9,7 @@ pipeline {
       }
       stage('build') {
          steps {
-             sh label: '', script: 'mvn clean package -Dmaven.test.skip=true dockerfile:build'
+             sh 'mvn clean package -Dmaven.test.skip=true dockerfile:build'
          }
       }
       //stage('docker build push') {
@@ -18,5 +18,10 @@ pipeline {
              //sh "docker push 49.233.11.217:5000/demo"
          //}
       //}
+      stage('docker run') {
+         steps {
+              sh 'docker run -d -p 8080:8080 --name demo demo'
+         }
+      }
    }
 }
