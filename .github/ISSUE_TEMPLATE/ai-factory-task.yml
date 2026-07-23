@@ -1,0 +1,53 @@
+name: AI Factory Task
+description: Submit a coding task to be handled by the AI factory.
+labels: ["ai-factory", "ai-factory-smoke"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the coding task you want the AI factory to perform. Keep the task focused and use Markdown lists for requirements and acceptance criteria.
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: What should the AI factory accomplish?
+      placeholder: e.g. Add a REST endpoint for listing factory tasks.
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Point the AI factory to relevant files, packages, behavior, and constraints.
+      placeholder: |
+        - Update pkg/api/server.go.
+        - Keep the provider-neutral interface.
+        - Do not print secrets in logs.
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know the task is complete?
+      placeholder: |
+        - [ ] New endpoint returns task list
+        - [ ] Tests cover the handler
+        - [ ] OpenAPI docs updated
+    validations:
+      required: true
+  - type: dropdown
+    id: allow_pr
+    attributes:
+      label: Allow creating a pull request
+      description: Is the AI factory allowed to create a PR for this task?
+      options:
+        - "Yes"
+        - "No"
+      default: 0
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        The `ai-factory` and `ai-factory-smoke` labels are applied automatically. Remove `ai-factory-smoke` if you want to save this as a draft without triggering the factory.
