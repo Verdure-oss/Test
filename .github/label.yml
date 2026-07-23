@@ -1,0 +1,19 @@
+labels:
+  - name: ai-factory
+    color: "0366d6"
+    description: ai-factory task
+  - name: ai-factory-done
+    color: "2ea44f"
+    description: ai-factory completed this issue
+  - name: ai-factory-failed
+    color: "d73a4a"
+    description: ai-factory failed this issue
+  - name: ai-factory-run
+    color: "2ea44f"
+    description: ai-factory real run
+  - name: ai-factory-running
+    color: "0366d6"
+    description: ai-factory is processing this issue
+  - name: ai-factory-smoke
+    color: "ffd700"
+    description: ai-factory smoke test
