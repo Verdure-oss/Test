@@ -1,0 +1,65 @@
+# 轻量级 workflow：触发 Verdure-oss/ai-factory 仓库的 workflow
+# 当 Issue 被打标签时，通过 repository_dispatch 触发 ai-factory
+
+name: Trigger AI Factory (Verdure-oss)
+
+on:
+  issues:
+    types:
+      - labeled
+
+jobs:
+  trigger-ai-factory:
+    runs-on: ubuntu-latest
+    # 只在特定标签时触发
+    if: >
+      github.event.label.name == 'ai-factory-run' ||
+      github.event.label.name == 'ai-factory-smoke'
+
+    steps:
+      - name: Trigger repository_dispatch
+        env:
+          GITHUB_TOKEN: ${{ secrets.AI_FACTORY_CROSS_REPO_TOKEN }}
+        run: |
+          echo "触发 Verdure-oss/ai-factory 仓库的 workflow..."
+          echo "Issue: #${{ github.event.issue.number }}"
+          echo "标签: ${{ github.event.label.name }}"
+          echo "仓库: ${{ github.repository }}"
+
+          # 确定触发类型
+          if [[ "${{ github.event.label.name }}" == "ai-factory-run" ]]; then
+            TRIGGER_TYPE="run"
+          else
+            TRIGGER_TYPE="smoke"
+          fi
+
+          # 发送 repository_dispatch
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"event_type\": \"issue-labeled\",
+              \"client_payload\": {
+                \"repository\": \"${{ github.repository }}\",
+                \"issue_number\": ${{ github.event.issue.number }},
+                \"action\": \"labeled\",
+                \"label_name\": \"${{ github.event.label.name }}\",
+                \"sender\": \"${{ github.event.sender.login }}\",
+                \"trigger_type\": \"${TRIGGER_TYPE}\"
+              }
+            }" \
+            "https://api.github.com/repos/Verdure-oss/ai-factory/dispatches")
+
+          HTTP_CODE=$(echo "${RESPONSE}" | tail -n1)
+          BODY=$(echo "${RESPONSE}" | sed '$d')
+
+          echo "HTTP 状态码: ${HTTP_CODE}"
+          echo "响应: ${BODY}"
+
+          if [[ "${HTTP_CODE}" -ge 200 && "${HTTP_CODE}" -lt 300 ]]; then
+            echo "✓ 成功触发 Verdure-oss/ai-factory"
+          else
+            echo "✗ 触发失败"
+            exit 1
+          fi
