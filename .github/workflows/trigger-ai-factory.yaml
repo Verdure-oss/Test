@@ -1,7 +1,8 @@
-# 轻量级 workflow：触发 Verdure-oss/ai-factory 仓库的 workflow
+# 轻量级 workflow：触发 ai-factory 仓库的 workflow
 # 当 Issue 被打标签时，通过 repository_dispatch 触发 ai-factory
+# 文档：docs/cross-repo-trigger-guide.md
 
-name: Trigger AI Factory (Verdure-oss)
+name: Trigger AI Factory
 
 on:
   issues:
@@ -17,49 +18,112 @@ jobs:
       github.event.label.name == 'ai-factory-smoke'
 
     steps:
+      - name: Validate configuration
+        run: |
+          echo "=========================================="
+          echo "验证配置"
+          echo "=========================================="
+
+          # 检查 token 是否配置
+          if [[ -z "${{ secrets.AI_FACTORY_CROSS_REPO_TOKEN }}" ]]; then
+            echo "❌ 错误: AI_FACTORY_CROSS_REPO_TOKEN 未配置"
+            echo "请参考 docs/cross-repo-trigger-guide.md 配置 secret"
+            exit 1
+          fi
+
+          echo "✓ 配置验证通过"
+
       - name: Trigger repository_dispatch
         env:
           GITHUB_TOKEN: ${{ secrets.AI_FACTORY_CROSS_REPO_TOKEN }}
         run: |
-          echo "触发 Verdure-oss/ai-factory 仓库的 workflow..."
+          echo "=========================================="
+          echo "触发 ai-factory 仓库的 workflow"
+          echo "=========================================="
           echo "Issue: #${{ github.event.issue.number }}"
           echo "标签: ${{ github.event.label.name }}"
           echo "仓库: ${{ github.repository }}"
+          echo "触发者: ${{ github.event.sender.login }}"
+          echo "时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "=========================================="
 
           # 确定触发类型
           if [[ "${{ github.event.label.name }}" == "ai-factory-run" ]]; then
             TRIGGER_TYPE="run"
+            echo "模式: 正式运行（需要 OpenAI API Key）"
           else
             TRIGGER_TYPE="smoke"
+            echo "模式: 冒烟测试（不需要 OpenAI API Key）"
           fi
 
+          # 构造 payload
+          PAYLOAD=$(cat <<EOF
+          {
+            "event_type": "issue-labeled",
+            "client_payload": {
+              "repository": "${{ github.repository }}",
+              "issue_number": ${{ github.event.issue.number }},
+              "action": "labeled",
+              "label_name": "${{ github.event.label.name }}",
+              "sender": "${{ github.event.sender.login }}",
+              "trigger_type": "${TRIGGER_TYPE}",
+              "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            }
+          }
+          EOF
+          )
+
+          echo "Payload:"
+          echo "${PAYLOAD}" | jq . 2>/dev/null || echo "${PAYLOAD}"
+
           # 发送 repository_dispatch
+          echo ""
+          echo "发送 repository_dispatch 请求..."
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"event_type\": \"issue-labeled\",
-              \"client_payload\": {
-                \"repository\": \"${{ github.repository }}\",
-                \"issue_number\": ${{ github.event.issue.number }},
-                \"action\": \"labeled\",
-                \"label_name\": \"${{ github.event.label.name }}\",
-                \"sender\": \"${{ github.event.sender.login }}\",
-                \"trigger_type\": \"${TRIGGER_TYPE}\"
-              }
-            }" \
+            -d "${PAYLOAD}" \
             "https://api.github.com/repos/Verdure-oss/ai-factory/dispatches")
 
           HTTP_CODE=$(echo "${RESPONSE}" | tail -n1)
           BODY=$(echo "${RESPONSE}" | sed '$d')
 
           echo "HTTP 状态码: ${HTTP_CODE}"
-          echo "响应: ${BODY}"
+          if [[ -n "${BODY}" ]]; then
+            echo "响应: ${BODY}"
+          fi
 
+          # 检查结果
           if [[ "${HTTP_CODE}" -ge 200 && "${HTTP_CODE}" -lt 300 ]]; then
-            echo "✓ 成功触发 Verdure-oss/ai-factory"
+            echo ""
+            echo "=========================================="
+            echo "✓ 成功触发 ai-factory"
+            echo "=========================================="
+            echo "请查看 ai-factory 仓库的 Actions 页面确认 workflow 运行状态"
+            echo "https://github.com/Verdure-oss/ai-factory/actions"
           else
+            echo ""
+            echo "=========================================="
             echo "✗ 触发失败"
+            echo "=========================================="
+            echo "可能的原因："
+            echo "1. AI_FACTORY_CROSS_REPO_TOKEN 权限不足"
+            echo "2. ai-factory 仓库的 process-issue.yaml 不存在"
+            echo "3. 网络问题"
+            echo ""
+            echo "请参考 docs/cross-repo-trigger-guide.md 的故障排除部分"
             exit 1
           fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "执行摘要"
+          echo "=========================================="
+          echo "Issue: #${{ github.event.issue.number }}"
+          echo "标签: ${{ github.event.label.name }}"
+          echo "仓库: ${{ github.repository }}"
+          echo "状态: ${{ job.status }}"
+          echo "=========================================="
